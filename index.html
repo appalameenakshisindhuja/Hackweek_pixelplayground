@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Paint - Drawing App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        .toolbar {
+            background: #f8f9fa;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tool-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tool-group h3 {
+            font-size: 0.9em;
+            color: #495057;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .color-picker {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .color-picker:hover {
+            transform: scale(1.1);
+        }
+
+        .brush-size {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .brush-size::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4facfe;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .brush-size::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4facfe;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .size-display {
+            text-align: center;
+            font-weight: bold;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .preset-colors {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .preset-color {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .preset-color:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .preset-color.active {
+            border-color: #4facfe;
+            transform: scale(1.1);
+        }
+
+        .brush-types {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .brush-btn {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .brush-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .brush-btn.active {
+            background: #4facfe;
+            color: white;
+            border-color: #4facfe;
+        }
+
+        .brush-btn .icon {
+            font-size: 1.5em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .opacity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .opacity-slider {
+            flex: 1;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .opacity-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #28a745;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .opacity-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #28a745;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            font-size: 0.9em;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .action-btn.secondary:hover {
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+        }
+
+        .canvas-container {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+
+        #drawingCanvas {
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            background: white;
+            cursor: crosshair;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            touch-action: none;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .status-bar {
+            background: #e9ecef;
+            padding: 10px 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .brush-preview {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brush-preview canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            #drawingCanvas {
+                width: 100%;
+                max-width: 500px;
+                height: 400px;
+            }
+            
+            .control-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🎨 Advanced Paint Studio</h1>
+        </div>
+        
+        <div class="toolbar">
+            <div class="tool-group">
+                <h3>🎨 Colors</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="color" class="color-picker" id="colorPicker" value="#000000">
+                    <div class="size-display" style="flex: 1;">Custom</div>
+                </div>
+                <div class="preset-colors">
+                    <div class="preset-color active" style="background-color: #000000" data-color="#000000"></div>
+                    <div class="preset-color" style="background-color: #ff0000" data-color="#ff0000"></div>
+                    <div class="preset-color" style="background-color: #00ff00" data-color="#00ff00"></div>
+                    <div class="preset-color" style="background-color: #0000ff" data-color="#0000ff"></div>
+                    <div class="preset-color" style="background-color: #ffff00" data-color="#ffff00"></div>
+                    <div class="preset-color" style="background-color: #ff00ff" data-color="#ff00ff"></div>
+                    <div class="preset-color" style="background-color: #00ffff" data-color="#00ffff"></div>
+                    <div class="preset-color" style="background-color: #ffa500" data-color="#ffa500"></div>
+                    <div class="preset-color" style="background-color: #800080" data-color="#800080"></div>
+                    <div class="preset-color" style="background-color: #ffc0cb" data-color="#ffc0cb"></div>
+                    <div class="preset-color" style="background-color: #8b4513" data-color="#8b4513"></div>
+                    <div class="preset-color" style="background-color: #808080" data-color="#808080"></div>
+                </div>
+            </div>
+            
+            <div class="tool-group">
+                <h3>🖌️ Brush Types</h3>
+                <div class="brush-types">
+                    <div class="brush-btn active" data-brush="normal">
+                        <span class="icon">✏️</span>
+                        Normal
+                    </div>
+                    <div class="brush-btn" data-brush="calligraphy">
+                        <span class="icon">🖋️</span>
+                        Calligraphy
+                    </div>
+                    <div class="brush-btn" data-brush="spray">
+                        <span class="icon">💨</span>
+                        Spray
+                    </div>
+                    <div class="brush-btn" data-brush="marker">
+                        <span class="icon">🖊️</span>
+                        Marker
+                    </div>
+                    <div class="brush-btn" data-brush="pencil">
+                        <span class="icon">✎</span>
+                        Pencil
+                    </div>
+                    <div class="brush-btn" data-brush="eraser">
+                        <span class="icon">🧹</span>
+                        Eraser
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tool-group">
+                <h3>📏 Size & Opacity</h3>
+                <label style="font-size: 0.8em; color: #6c757d;">Brush Size:</label>
+                <input type="range" class="brush-size" id="brushSize" min="1" max="100" value="5">
+                <div class="size-display" id="sizeDisplay">5px</div>
+                
+                <label style="font-size: 0.8em; color: #6c757d; margin-top: 10px;">Opacity:</label>
+                <div class="opacity-control">
+                    <input type="range" class="opacity-slider" id="opacitySlider" min="0.1" max="1" step="0.1" value="1">
+                    <span id="opacityDisplay">100%</span>
+                </div>
+            </div>
+            
+            <div class="tool-group">
+                <h3>🔧 Actions</h3>
+                <div class="control-buttons">
+                    <button class="action-btn" id="clearBtn">🗑️ Clear</button>
+                    <button class="action-btn secondary" id="undoBtn">↶ Undo</button>
+                    <button class="action-btn secondary" id="downloadBtn">💾 Save</button>
+                </div>
+                <div class="brush-preview">
+                    <canvas id="previewCanvas" width="60" height="60"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="drawingCanvas" width="900" height="600"></canvas>
+        </div>
+        
+        <div class="status-bar">
+            Advanced drawing tools • Multiple brush types • Touch & mouse support • Save your artwork
+        </div>
+    </div>
+
+    <script>
+        class AdvancedDrawingApp {
+            constructor() {
+                this.canvas = document.getElementById('drawingCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.previewCanvas = document.getElementById('previewCanvas');
+                this.previewCtx = this.previewCanvas.getContext('2d');
+                
+                this.isDrawing = false;
+                this.currentColor = '#000000';
+                this.currentSize = 5;
+                this.currentOpacity = 1;
+                this.currentBrush = 'normal';
+                this.lastX = 0;
+                this.lastY = 0;
+                this.history = [];
+                this.historyStep = -1;
+                
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.setupTouch();
+                this.updateBrushPreview();
+                this.saveState();
+            }
+            
+            setupCanvas() {
+                // Set initial canvas size
+                this.canvas.width = 900;
+                this.canvas.height = 600;
+                
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.strokeStyle = this.currentColor;
+                this.ctx.lineWidth = this.currentSize;
+                this.ctx.globalAlpha = this.currentOpacity;
+                
+                // Fill with white background
+                this.ctx.fillStyle = 'white';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            
+            setupEventListeners() {
+                // Color picker
+                const colorPicker = document.getElementById('colorPicker');
+                colorPicker.addEventListener('change', (e) => {
+                    this.currentColor = e.target.value;
+                    this.updateBrushPreview();
+                    this.updateActivePreset(this.currentColor);
+                });
+                
+                // Preset colors
+                const presetColors = document.querySelectorAll('.preset-color');
+                presetColors.forEach(preset => {
+                    preset.addEventListener('click', () => {
+                        const color = preset.dataset.color;
+                        this.currentColor = color;
+                        colorPicker.value = color;
+                        this.updateBrushPreview();
+                        this.updateActivePreset(color);
+                    });
+                });
+                
+                // Brush types
+                const brushBtns = document.querySelectorAll('.brush-btn');
+                brushBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.currentBrush = btn.dataset.brush;
+                        this.updateActiveBrush(btn);
+                        this.updateBrushPreview();
+                    });
+                });
+                
+                // Brush size
+                const brushSize = document.getElementById('brushSize');
+                const sizeDisplay = document.getElementById('sizeDisplay');
+                brushSize.addEventListener('input', (e) => {
+                    this.currentSize = e.target.value;
+                    sizeDisplay.textContent = this.currentSize + 'px';
+                    this.updateBrushPreview();
+                });
+                
+                // Opacity
+                const opacitySlider = document.getElementById('opacitySlider');
+                const opacityDisplay = document.getElementById('opacityDisplay');
+                opacitySlider.addEventListener('input', (e) => {
+                    this.currentOpacity = e.target.value;
+                    opacityDisplay.textContent = Math.round(this.currentOpacity * 100) + '%';
+                    this.updateBrushPreview();
+                });
+                
+                // Action buttons
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearCanvas());
+                document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+                document.getElementById('downloadBtn').addEventListener('click', () => this.downloadCanvas());
+                
+                // Mouse events
+                this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+                this.canvas.addEventListener('mousemove', (e) => this.draw(e));
+                this.canvas.addEventListener('mouseup', () => this.stopDrawing());
+                this.canvas.addEventListener('mouseout', () => this.stopDrawing());
+            }
+            
+            setupTouch() {
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseEvent = new MouseEvent('mousedown', {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    this.startDrawing(mouseEvent);
+                });
+                
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseEvent = new MouseEvent('mousemove', {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    this.draw(mouseEvent);
+                });
+                
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.stopDrawing();
+                });
+            }
+            
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            }
+            
+            startDrawing(e) {
+                this.isDrawing = true;
+                const pos = this.getMousePos(e);
+                this.lastX = pos.x;
+                this.lastY = pos.y;
+                
+                // Set drawing properties
+                this.ctx.globalAlpha = this.currentOpacity;
+                this.ctx.strokeStyle = this.currentColor;
+                this.ctx.lineWidth = this.currentSize;
+                this.ctx.globalCompositeOperation = 'source-over';
+                
+                if (this.currentBrush === 'spray') {
+                    this.sprayPaint(pos.x, pos.y);
+                } else if (this.currentBrush === 'eraser') {
+                    this.ctx.globalCompositeOperation = 'destination-out';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(pos.x, pos.y);
+                } else {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(pos.x, pos.y);
+                    // Draw a small dot at the start point
+                    this.ctx.arc(pos.x, pos.y, this.currentSize/2, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(pos.x, pos.y);
+                }
+            }
+            
+            draw(e) {
+                if (!this.isDrawing) return;
+                
+                const pos = this.getMousePos(e);
+                
+                switch (this.currentBrush) {
+                    case 'normal':
+                        this.drawNormal(pos);
+                        break;
+                    case 'calligraphy':
+                        this.drawCalligraphy(pos);
+                        break;
+                    case 'spray':
+                        this.sprayPaint(pos.x, pos.y);
+                        break;
+                    case 'marker':
+                        this.drawMarker(pos);
+                        break;
+                    case 'pencil':
+                        this.drawPencil(pos);
+                        break;
+                    case 'eraser':
+                        this.drawEraser(pos);
+                        break;
+                }
+                
+                this.lastX = pos.x;
+                this.lastY = pos.y;
+            }
+            
+            drawNormal(pos) {
+                this.ctx.strokeStyle = this.currentColor;
+                this.ctx.fillStyle = this.currentColor;
+                this.ctx.lineWidth = this.currentSize;
+                this.ctx.lineCap = 'round';
+                this.ctx.globalCompositeOperation = 'source-over';
+                
+                this.ctx.lineTo(pos.x, pos.y);
+                this.ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.moveTo(pos.x, pos.y);
+            }
+            
+            drawCalligraphy(pos) {
+                const distance = Math.sqrt(Math.pow(pos.x - this.lastX, 2) + Math.pow(pos.y - this.lastY, 2));
+                const angle = Math.atan2(pos.y - this.lastY, pos.x - this.lastX);
+                
+                this.ctx.strokeStyle = this.currentColor;
+                this.ctx.lineWidth = this.currentSize * (0.5 + Math.abs(Math.sin(angle)) * 0.5);
+                this.ctx.lineCap = 'round';
+                this.ctx.globalCompositeOperation = 'source-over';
+                
+                this.ctx.lineTo(pos.x, pos.y);
+                this.ctx.stroke();
+            }
+            
+            sprayPaint(x, y) {
+                const density = 20;
+                for (let i = 0; i < density; i++) {
+                    const offsetX = (Math.random() - 0.5) * this.currentSize;
+                    const offsetY = (Math.random() - 0.5) * this.currentSize;
+                    
+                    this.ctx.fillStyle = this.currentColor;
+                    this.ctx.globalCompositeOperation = 'source-over';
+                    this.ctx.fillRect(x + offsetX, y + offsetY, 1, 1);
+                }
+            }
+            
+            drawMarker(pos) {
+                this.ctx.strokeStyle = this.currentColor;
+                this.ctx.lineWidth = this.currentSize;
+                this.ctx.lineCap = 'square';
+                this.ctx.globalCompositeOperation = 'multiply';
+                
+                this.ctx.lineTo(pos.x, pos.y);
+                this.ctx.stroke();
+            }
+            
+            drawPencil(pos) {
+                const distance = Math.sqrt(Math.pow(pos.x - this.lastX, 2) + Math.pow(pos.y - this.lastY, 2));
+                const opacity = Math.min(distance / 10, 1) * this.currentOpacity;
+                
+                this.ctx.strokeStyle = this.currentColor;
+                this.ctx.lineWidth = this.currentSize * 0.7;
+                this.ctx.lineCap = 'round';
+                this.ctx.globalCompositeOperation = 'source-over';
+                this.ctx.globalAlpha = opacity * 0.7;
+                
+                this.ctx.lineTo(pos.x, pos.y);
+                this.ctx.stroke();
+            }
+            
+            drawEraser(pos) {
+                this.ctx.globalCompositeOperation = 'destination-out';
+                this.ctx.lineWidth = this.currentSize;
+                this.ctx.lineCap = 'round';
+                
+                this.ctx.lineTo(pos.x, pos.y);
+                this.ctx.stroke();
+            }
+            
+            stopDrawing() {
+                if (this.isDrawing) {
+                    this.isDrawing = false;
+                    this.ctx.beginPath();
+                    this.saveState();
+                }
+            }
+            
+            updateBrushPreview() {
+                this.previewCtx.clearRect(0, 0, 60, 60);
+                this.previewCtx.globalAlpha = this.currentOpacity;
+                
+                const centerX = 30;
+                const centerY = 30;
+                const previewSize = Math.min(this.currentSize / 2, 25);
+                
+                switch (this.currentBrush) {
+                    case 'normal':
+                        this.previewCtx.fillStyle = this.currentColor;
+                        this.previewCtx.beginPath();
+                        this.previewCtx.arc(centerX, centerY, previewSize, 0, 2 * Math.PI);
+                        this.previewCtx.fill();
+                        break;
+                    case 'calligraphy':
+                        this.previewCtx.fillStyle = this.currentColor;
+                        this.previewCtx.fillRect(centerX - previewSize, centerY - previewSize/2, previewSize * 2, previewSize);
+                        break;
+                    case 'spray':
+                        for (let i = 0; i < 50; i++) {
+                            const x = centerX + (Math.random() - 0.5) * previewSize * 2;
+                            const y = centerY + (Math.random() - 0.5) * previewSize * 2;
+                            this.previewCtx.fillStyle = this.currentColor;
+                            this.previewCtx.fillRect(x, y, 1, 1);
+                        }
+                        break;
+                    case 'marker':
+                        this.previewCtx.fillStyle = this.currentColor;
+                        this.previewCtx.globalCompositeOperation = 'multiply';
+                        this.previewCtx.fillRect(centerX - previewSize, centerY - previewSize/3, previewSize * 2, previewSize * 2/3);
+                        break;
+                    case 'pencil':
+                        this.previewCtx.fillStyle = this.currentColor;
+                        this.previewCtx.globalAlpha = this.currentOpacity * 0.7;
+                        this.previewCtx.beginPath();
+                        this.previewCtx.arc(centerX, centerY, previewSize * 0.7, 0, 2 * Math.PI);
+                        this.previewCtx.fill();
+                        break;
+                    case 'eraser':
+                        this.previewCtx.strokeStyle = '#ff6b6b';
+                        this.previewCtx.lineWidth = 2;
+                        this.previewCtx.beginPath();
+                        this.previewCtx.arc(centerX, centerY, previewSize, 0, 2 * Math.PI);
+                        this.previewCtx.stroke();
+                        break;
+                }
+                
+                this.previewCtx.globalCompositeOperation = 'source-over';
+                this.previewCtx.globalAlpha = 1;
+            }
+            
+            clearCanvas() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.saveState();
+            }
+            
+            saveState() {
+                this.historyStep++;
+                if (this.historyStep < this.history.length) {
+                    this.history.length = this.historyStep;
+                }
+                this.history.push(this.canvas.toDataURL());
+                if (this.history.length > 20) {
+                    this.history.shift();
+                    this.historyStep--;
+                }
+            }
+            
+            undo() {
+                if (this.historyStep > 0) {
+                    this.historyStep--;
+                    const img = new Image();
+                    img.onload = () => {
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        this.ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = this.history[this.historyStep];
+                }
+            }
+            
+            downloadCanvas() {
+                const link = document.createElement('a');
+                link.download = 'my-artwork.png';
+                link.href = this.canvas.toDataURL();
+                link.click();
+            }
+            
+            updateActivePreset(color) {
+                const presets = document.querySelectorAll('.preset-color');
+                presets.forEach(preset => {
+                    preset.classList.remove('active');
+                    if (preset.dataset.color === color) {
+                        preset.classList.add('active');
+                    }
+                });
+            }
+            
+            updateActiveBrush(activeBtn) {
+                const brushBtns = document.querySelectorAll('.brush-btn');
+                brushBtns.forEach(btn => btn.classList.remove('active'));
+                activeBtn.classList.add('active');
+            }
+        }
+        
+        // Initialize the app when the page loads
+        window.addEventListener('load', () => {
+            new AdvancedDrawingApp();
+        });
+    </script>
+</body>
+</html>
