@@ -71,12 +71,9 @@ A feature-rich, realistic digital **drawing application** that simulates real-wo
 
 ---
 
-## 📤 Export & Sharing
+## 📸 Screenshot
 
-- 💾 Download your final artwork as a **.png** image
-- 🔄 Export at any stage to preserve progress
-- 🖨️ Ready for print or digital sharing
-
+![Drawing App Screenshot](image.png)
 ---
 
 
